@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ŞarjHarita - Tüm İstasyonlar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:#f9fafb}
+        .navbar{background:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #2ecc71;position:sticky;top:0;z-index:100}
+        .logo{font-size:20px;font-weight:bold;color:#27ae60;text-decoration:none}
+        .nav-links a{color:#555;text-decoration:none;margin:0 8px;font-size:14px}
+        .nav-links a:hover,.nav-links a.active{color:#27ae60}
+        .container{max-width:1200px;margin:0 auto;padding:30px 20px}
+        h1{text-align:center;margin-bottom:10px;font-size:28px}
+        .search-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+        .search-bar input{flex:1;min-width:200px;padding:10px 15px;border:2px solid #ddd;border-radius:8px;font-size:14px}
+        .search-bar select{padding:10px 15px;border:2px solid #ddd;border-radius:8px;font-size:14px;cursor:pointer}
+        .search-bar input:focus,.search-bar select:focus{border-color:#2ecc71;outline:none}
+        .stations-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:15px}
+        .station-card{background:#fff;padding:15px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);border-left:4px solid #2ecc71;transition:all 0.2s}
+        .station-card:hover{box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+        .station-card h4{margin-bottom:5px;color:#333}
+        .station-card .info{font-size:13px;color:#666;margin:3px 0}
+        .station-card .price{font-weight:bold;color:#27ae60;font-size:15px;margin-top:8px}
+        .gmaps-link{display:inline-block;background:#2ecc71;color:#fff;padding:5px 12px;border-radius:15px;text-decoration:none;font-size:11px;font-weight:bold;margin-top:5px}
+        .count-badge{text-align:center;margin-bottom:15px;color:#666;font-size:14px}
+        @media(max-width:768px){.stations-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">⚡ ŞarjHarita</a>
+        <div class="nav-links">
+            <a href="index.html">Ana Sayfa</a>
+            <a href="harita.html">Harita</a>
+            <a href="rota.html">Rota</a>
+            <a href="istasyonlar.html" class="active">İstasyonlar</a>
+            <a href="tasarruf.html">Tasarruf</a>
+            <a href="hakkimizda.html">Hakkımızda</a>
+            <a href="iletisim.html">İletişim</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>⚡ Tüm Şarj İstasyonları</h1>
+        <div class="count-badge" id="countBadge"></div>
+        
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Şehir veya marka ara..." oninput="filterStations()">
+            <select id="brandFilter" onchange="filterStations()">
+                <option value="">Tüm Markalar</option>
+                <option value="ZES">ZES</option><option value="Eşarj">Eşarj</option>
+                <option value="Voltrun">Voltrun</option><option value="Sharz">Sharz</option>
+                <option value="Trugo">Trugo</option><option value="Tesla">Tesla</option>
+            </select>
+            <select id="powerFilter" onchange="filterStations()">
+                <option value="">Tüm Güçler</option>
+                <option value="50">50 kW+</option><option value="150">150 kW+</option><option value="300">300 kW</option>
+            </select>
+        </div>
+        
+        <div class="stations-grid" id="stationsGrid"></div>
+    </div>
+
+    <script>
+        var brands = [
+            {name:'ZES',price:7.99,color:'#2ecc71'},{name:'Eşarj',price:8.49,color:'#3498db'},
+            {name:'Voltrun',price:7.49,color:'#e67e22'},{name:'Sharz',price:8.99,color:'#9b59b6'},
+            {name:'Trugo',price:6.99,color:'#1abc9c'},{name:'Tesla',price:9.99,color:'#e74c3c'}
+        ];
+        
+        var cities = ['İstanbul','Ankara','İzmir','Bursa','Antalya','Konya','Adana','Gaziantep','Kayseri','Samsun','Eskişehir','Diyarbakır','Mersin','Trabzon','Van','Muğla','Kocaeli','Sakarya','Tekirdağ','Edirne','Manisa','Malatya','Erzurum','Şanlıurfa','Hatay','Denizli','Aydın','Balıkesir','Çanakkale'];
+        
+        var allStations = [];
+        
+        cities.forEach(function(city) {
+            var count = Math.floor(Math.random() * 100) + 50;
+            for(var i = 0; i < count; i++) {
+                var brand = brands[Math.floor(Math.random() * brands.length)];
+                var powers = [50,75,100,150,180,250,300];
+                var districts = ['Merkez','AVM','Otoyol','Sanayi','Üniversite','Havalimanı','Plaza'];
+                allStations.push({
+                    name: brand.name + ' ' + city + ' ' + districts[Math.floor(Math.random()*7)],
+                    brand: brand.name, price: brand.price + (Math.random()-0.5)*0.5,
+                    color: brand.color, power: powers[Math.floor(Math.random()*7)],
+                    city: city, available: Math.floor(Math.random()*4), total: 4
+                });
+            }
+        });
+        
+        function displayStations(stations) {
+            document.getElementById('countBadge').textContent = stations.length + ' istasyon bulundu';
+            var grid = document.getElementById('stationsGrid');
+            
+            if(stations.length === 0) {
+                grid.innerHTML = '<p style="text-align:center;padding:40px;color:#999">İstasyon bulunamadı</p>';
+                return;
+            }
+            
+            grid.innerHTML = '';
+            for(var i = 0; i < Math.min(stations.length, 200); i++) {
+                var s = stations[i];
+                var card = document.createElement('div');
+                card.className = 'station-card';
+                card.innerHTML = '<h4>'+s.name+'</h4>' +
+                    '<div class="info">🏢 '+s.brand+' | ⚡ '+s.power+' kW</div>' +
+                    '<div class="info">📍 '+s.city+' | 🟢 '+s.available+'/'+s.total+' müsait</div>' +
+                    '<div class="price">💰 '+s.price.toFixed(2)+' TL/kWh</div>' +
+                    '<a href="https://www.google.com/maps/search/'+encodeURIComponent(s.name)+'" target="_blank" class="gmaps-link">🗺️ Google Maps\'te Ara</a>';
+                grid.appendChild(card);
+            }
+        }
+        
+        function filterStations() {
+            var search = document.getElementById('searchInput').value.toLowerCase();
+            var brand = document.getElementById('brandFilter').value;
+            var power = document.getElementById('powerFilter').value;
+            
+            var filtered = allStations;
+            if(search) filtered = filtered.filter(function(s) { return s.name.toLowerCase().includes(search) || s.city.toLowerCase().includes(search); });
+            if(brand) filtered = filtered.filter(function(s) { return s.brand === brand; });
+            if(power) filtered = filtered.filter(function(s) { return s.power >= parseInt(power); });
+            
+            displayStations(filtered);
+        }
+        
+        displayStations(allStations);
+    </script>
+</body>
+</html>

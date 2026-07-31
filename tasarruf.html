@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ŞarjHarita - Tasarruf Hesapla</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:#f9fafb}
+        .navbar{background:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #2ecc71;position:sticky;top:0;z-index:100}
+        .logo{font-size:20px;font-weight:bold;color:#27ae60;text-decoration:none}
+        .nav-links a{color:#555;text-decoration:none;margin:0 8px;font-size:14px}
+        .nav-links a:hover,.nav-links a.active{color:#27ae60}
+        .container{max-width:900px;margin:0 auto;padding:30px 20px}
+        h1{text-align:center;margin-bottom:30px;font-size:28px}
+        .tabs{display:flex;gap:5px;margin-bottom:25px;flex-wrap:wrap;justify-content:center}
+        .tab-btn{padding:10px 20px;border:2px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:14px;font-weight:500}
+        .tab-btn.active{background:#2ecc71;color:#fff;border-color:#2ecc71}
+        .tab-content{display:none}
+        .tab-content.active{display:block}
+        .calc-card{background:#fff;padding:25px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.08);margin-bottom:20px}
+        .calc-card h3{margin-bottom:15px;color:#333}
+        .form-group{margin-bottom:12px}
+        .form-group label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:4px}
+        .form-group input,.form-group select{width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px}
+        .form-group input:focus,.form-group select:focus{border-color:#2ecc71;outline:none}
+        .btn-calc{width:100%;padding:12px;background:#2ecc71;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+        .btn-calc:hover{background:#27ae60}
+        .result-box{background:#e8f5e9;padding:20px;border-radius:10px;margin-top:15px;display:none;text-align:center}
+        .result-box.show{display:block}
+        .result-box h2{color:#27ae60;font-size:32px;margin-bottom:10px}
+        .result-box p{color:#555;font-size:14px}
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        @media(max-width:768px){.grid-2{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">⚡ ŞarjHarita</a>
+        <div class="nav-links">
+            <a href="index.html">Ana Sayfa</a>
+            <a href="harita.html">Harita</a>
+            <a href="rota.html">Rota</a>
+            <a href="istasyonlar.html">İstasyonlar</a>
+            <a href="tasarruf.html" class="active">Tasarruf</a>
+            <a href="hakkimizda.html">Hakkımızda</a>
+            <a href="iletisim.html">İletişim</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>💰 Tasarruf & Şarj Hesaplayıcı</h1>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('savings')">💰 Tasarruf</button>
+            <button class="tab-btn" onclick="switchTab('charging')">⏱️ Şarj Süresi</button>
+            <button class="tab-btn" onclick="switchTab('carbon')">🌍 Karbon</button>
+        </div>
+
+        <div class="tab-content active" id="tab-savings">
+            <div class="grid-2">
+                <div class="calc-card">
+                    <h3>📊 Tasarruf Hesapla</h3>
+                    <div class="form-group"><label>Aylık KM</label><input type="number" id="monthlyKm" value="1500"></div>
+                    <div class="form-group"><label>Benzin (TL/Lt)</label><input type="number" id="fuelPrice" value="42" step="0.1"></div>
+                    <div class="form-group"><label>Elektrik (TL/kWh)</label><input type="number" id="elecPrice" value="8" step="0.1"></div>
+                    <button class="btn-calc" onclick="calcSavings()">Hesapla</button>
+                    <div class="result-box" id="savingsResult"><h2 id="savingsAmount">-</h2><p>Aylık Tasarruf</p></div>
+                </div>
+                <div class="calc-card">
+                    <h3>⏱️ Şarj Süresi</h3>
+                    <div class="form-group"><label>Batarya (kWh)</label><input type="number" id="battery" value="88.5"></div>
+                    <div class="form-group"><label>Şarj Gücü (kW)</label><select id="power"><option value="7.4">AC 7.4 kW</option><option value="50">DC 50 kW</option><option value="150" selected>DC 150 kW</option><option value="300">DC 300 kW</option></select></div>
+                    <div class="form-group"><label>Başlangıç %</label><input type="number" id="startPct" value="20"></div>
+                    <div class="form-group"><label>Hedef %</label><input type="number" id="endPct" value="80"></div>
+                    <button class="btn-calc" onclick="calcChargeTime()">Hesapla</button>
+                    <div class="result-box" id="chargeResult"><h2 id="chargeTime">-</h2><p>Şarj Süresi</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-carbon">
+            <div class="calc-card">
+                <h3>🌍 Karbon Ayak İzi</h3>
+                <div class="form-group"><label>Aylık KM</label><input type="number" id="carbonKm" value="1500"></div>
+                <button class="btn-calc" onclick="calcCarbon()">Hesapla</button>
+                <div class="result-box" id="carbonResult"><h2 id="co2Saved">-</h2><p>kg CO₂ tasarruf/ay</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+            event.target.classList.add('active');
+            document.getElementById('tab-'+tab).classList.add('active');
+        }
+
+        function calcSavings() {
+            var km = parseFloat(document.getElementById('monthlyKm').value) || 1500;
+            var fuel = parseFloat(document.getElementById('fuelPrice').value) || 42;
+            var elec = parseFloat(document.getElementById('elecPrice').value) || 8;
+            var fuelCost = (km/100)*7*fuel;
+            var evCost = (km/100)*17*elec;
+            var saving = fuelCost - evCost;
+            document.getElementById('savingsResult').classList.add('show');
+            document.getElementById('savingsAmount').textContent = saving.toFixed(0) + ' TL';
+        }
+
+        function calcChargeTime() {
+            var battery = parseFloat(document.getElementById('battery').value) || 88.5;
+            var power = parseFloat(document.getElementById('power').value) || 150;
+            var start = parseFloat(document.getElementById('startPct').value) || 20;
+            var end = parseFloat(document.getElementById('endPct').value) || 80;
+            var energy = battery * (end - start) / 100;
+            var hours = energy / power;
+            var mins = Math.round(hours * 60);
+            document.getElementById('chargeResult').classList.add('show');
+            document.getElementById('chargeTime').textContent = mins < 60 ? mins + ' dakika' : Math.floor(hours) + ' saat ' + Math.round((hours-Math.floor(hours))*60) + ' dakika';
+        }
+
+        function calcCarbon() {
+            var km = parseFloat(document.getElementById('carbonKm').value) || 1500;
+            var co2 = (km/100)*7*2.3;
+            document.getElementById('carbonResult').classList.add('show');
+            document.getElementById('co2Saved').textContent = co2.toFixed(0);
+        }
+    </script>
+</body>
+</html>

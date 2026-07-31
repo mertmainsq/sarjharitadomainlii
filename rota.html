@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ŞarjHarita - Rota Planla | Gerçek Yol Mesafesi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:#f9fafb;color:#333}
+        .navbar{background:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #2ecc71;flex-wrap:wrap;gap:10px}
+        .logo{font-size:20px;font-weight:bold;color:#27ae60;text-decoration:none}
+        .nav-links{display:flex;flex-wrap:wrap;gap:5px}
+        .nav-links a{color:#555;text-decoration:none;padding:6px 10px;font-size:13px;border-radius:5px}
+        .nav-links a:hover,.nav-links a.active{color:#27ae60;background:#e8f5e9}
+        .container{max-width:900px;margin:0 auto;padding:30px 20px}
+        h1{text-align:center;margin-bottom:20px;font-size:26px}
+        .card{background:#fff;padding:25px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.08);margin-bottom:20px}
+        .form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+        .form-group{flex:1;min-width:180px}
+        .form-group label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
+        .form-group select,.form-group input{width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px;background:#fff}
+        .form-group select{cursor:pointer}
+        .form-group input:focus,.form-group select:focus{border-color:#2ecc71;outline:none}
+        button{padding:10px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:Arial;transition:all 0.2s}
+        .btn-primary{background:#2ecc71;color:#fff}.btn-primary:hover{background:#27ae60}
+        .btn-secondary{background:#eee;color:#333}.btn-secondary:hover{background:#ddd}
+        .btn-danger{background:#e74c3c;color:#fff}.btn-danger:hover{background:#c0392b}
+        .btn-info{background:#3498db;color:#fff}.btn-info:hover{background:#2980b9}
+        .btn-warning{background:#f39c12;color:#fff}.btn-warning:hover{background:#e67e22}
+        .btn-sm{padding:6px 12px;font-size:11px}
+        .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
+        
+        /* Location Input Styles */
+        .location-input-group{display:flex;gap:8px;align-items:center}
+        .location-input-group select{flex:1}
+        .location-input-group .btn-sm{flex-shrink:0;padding:10px 12px}
+        .gps-status{font-size:11px;color:#666;margin-top:4px}
+        .gps-status.success{color:#27ae60}
+        .gps-status.error{color:#e74c3c}
+        .gps-status.loading{color:#3498db}
+        
+        /* Custom Location Modal */
+        .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
+        .modal-overlay.show{display:flex}
+        .modal-content{background:#fff;padding:25px;border-radius:15px;max-width:450px;width:90%;max-height:90vh;overflow-y:auto}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+        .modal-header h3{font-size:18px;color:#333}
+        .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:#999}
+        .modal-close:hover{color:#333}
+        .coord-inputs{display:flex;gap:10px;margin-bottom:15px}
+        .coord-inputs .form-group{flex:1}
+        .location-name-input{margin-bottom:15px}
+        .quick-locations{margin-top:15px;padding-top:15px;border-top:1px solid #eee}
+        .quick-locations h4{font-size:13px;color:#666;margin-bottom:10px}
+        .quick-loc-btn{display:inline-block;padding:6px 12px;background:#f0f0f0;border:none;border-radius:15px;font-size:12px;cursor:pointer;margin:3px}
+        .quick-loc-btn:hover{background:#e0e0e0}
+        
+        /* Waypoint Styles */
+        .waypoints-section{margin-top:15px;padding-top:15px;border-top:1px dashed #ddd}
+        .waypoint-item{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:12px;background:#f8f9fa;border-radius:8px;border-left:3px solid #3498db;flex-wrap:wrap}
+        .waypoint-item .waypoint-num{background:#3498db;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;flex-shrink:0}
+        .waypoint-item .waypoint-content{flex:1;min-width:200px}
+        .waypoint-item .location-input-group{margin-bottom:0}
+        .waypoint-item .waypoint-info{font-size:11px;color:#888;margin-top:4px}
+        .waypoint-item .btn-danger{flex-shrink:0}
+        .add-buttons{display:flex;gap:10px;flex-wrap:wrap}
+        .add-waypoint-btn{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#e8f4fd;border:2px dashed #3498db;border-radius:8px;color:#3498db;font-weight:600;cursor:pointer;transition:all 0.2s;font-size:13px}
+        .add-waypoint-btn:hover{background:#d4edfc;border-color:#2980b9}
+        .add-custom-btn{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#fef3e2;border:2px dashed #f39c12;border-radius:8px;color:#e67e22;font-weight:600;cursor:pointer;transition:all 0.2s;font-size:13px}
+        .add-custom-btn:hover{background:#fde8c8;border-color:#e67e22}
+        
+        /* Route Summary */
+        .route-summary{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px;padding:12px;background:#f0f0f0;border-radius:8px;font-size:13px;align-items:center}
+        .route-point{background:#fff;padding:5px 12px;border-radius:15px;font-weight:600;display:flex;align-items:center;gap:5px;font-size:12px}
+        .route-point.start{border:2px solid #27ae60;color:#27ae60}
+        .route-point.end{border:2px solid #e74c3c;color:#e74c3c}
+        .route-point.waypoint{border:2px solid #3498db;color:#3498db}
+        .route-point.custom{border:2px solid #f39c12;color:#e67e22}
+        .route-arrow{color:#999}
+        
+        .loading{display:none;text-align:center;padding:20px;color:#666}
+        .loading.show{display:block}
+        .spinner{border:3px solid #f3f3f3;border-top:3px solid #2ecc71;border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite;margin:0 auto 10px}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        .result-box{background:#fff;padding:25px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.08);display:none}
+        .result-box.show{display:block}
+        .result-header{background:#e8f5e9;padding:15px;border-radius:10px;margin-bottom:20px}
+        .result-header h3{color:#27ae60;margin-bottom:10px;font-size:18px}
+        .result-info{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:14px}
+        .result-info span{font-weight:bold;color:#27ae60}
+        .badge{padding:2px 8px;border-radius:10px;font-size:10px;margin-left:6px;color:#fff}
+        .badge-real{background:#27ae60}
+        .badge-est{background:#e67e22}
+        
+        .segment-info{background:#fff3cd;padding:12px;border-radius:8px;margin-bottom:15px;border-left:4px solid #ffc107}
+        .segment-info h4{font-size:14px;margin-bottom:8px;color:#856404}
+        .segment-item{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ffeaa7;font-size:13px}
+        .segment-item:last-child{border-bottom:none}
+        
+        .station-item{display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f9fafb;border-radius:10px;margin-bottom:8px;border-left:4px solid #2ecc71;flex-wrap:wrap;gap:10px}
+        .station-item h4{font-size:14px;margin-bottom:3px}
+        .station-item .info{font-size:11px;color:#666}
+        .station-item .price{font-weight:bold;color:#27ae60;font-size:14px;margin-top:3px}
+        .station-km{text-align:center;min-width:55px}
+        .station-km .km{font-size:20px;font-weight:bold;color:#27ae60}
+        .station-km .label{font-size:10px;color:#888}
+        .gmaps-btn{display:inline-block;padding:6px 14px;background:#2ecc71;color:#fff;border-radius:15px;text-decoration:none;font-size:11px;font-weight:bold}
+        .gmaps-btn:hover{background:#27ae60}
+        .note{font-size:11px;color:#888;margin-top:5px;font-style:italic}
+        
+        @media(max-width:600px){
+            .station-item{flex-direction:column;text-align:center}
+            .waypoint-item{flex-direction:column;align-items:stretch}
+            .waypoint-item .waypoint-num{align-self:flex-start}
+            .location-input-group{flex-direction:column}
+            .location-input-group .btn-sm{width:100%}
+            .coord-inputs{flex-direction:column}
+            .add-buttons{flex-direction:column}
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">⚡ ŞarjHarita</a>
+        <div class="nav-links">
+            <a href="index.html">Ana Sayfa</a><a href="harita.html">Harita</a>
+            <a href="rota.html" class="active">Rota</a>
+            <a href="istasyonlar.html">İstasyonlar</a><a href="tasarruf.html">Tasarruf</a>
+            <a href="hakkimizda.html">Hakkımızda</a><a href="iletisim.html">İletişim</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>📍 Rota Planla <span class="badge badge-real">GPS + Konum Destekli</span></h1>
+        
+        <div class="card">
+            <!-- Başlangıç Noktası -->
+            <div class="form-row">
+                <div class="form-group" style="flex:2">
+                    <label>🚀 Başlangıç Noktası</label>
+                    <div class="location-input-group">
+                        <select id="startCity"></select>
+                        <button class="btn-info btn-sm" onclick="useMyLocation('start')" title="Mevcut Konumumu Kullan">
+                            <i class="fas fa-crosshairs"></i>
+                        </button>
+                        <button class="btn-warning btn-sm" onclick="openCustomLocationModal('start')" title="Manuel Konum Gir">
+                            <i class="fas fa-map-pin"></i>
+                        </button>
+                    </div>
+                    <div id="startGpsStatus" class="gps-status"></div>
+                </div>
+                <div class="form-group" style="flex:2">
+                    <label>🏁 Varış Noktası</label>
+                    <div class="location-input-group">
+                        <select id="endCity"></select>
+                        <button class="btn-info btn-sm" onclick="useMyLocation('end')" title="Mevcut Konumumu Kullan">
+                            <i class="fas fa-crosshairs"></i>
+                        </button>
+                        <button class="btn-warning btn-sm" onclick="openCustomLocationModal('end')" title="Manuel Konum Gir">
+                            <i class="fas fa-map-pin"></i>
+                        </button>
+                    </div>
+                    <div id="endGpsStatus" class="gps-status"></div>
+                </div>
+            </div>
+            
+            <!-- Araç Seçimi -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🚗 Araç Modeli (Opsiyonel)</label>
+                    <select id="vehicleModel">
+                        <option value="">-- Seçiniz --</option>
+                        <option value="togg">TOGG T10X (523 km)</option>
+                        <option value="tesla3">Tesla Model 3 (602 km)</option>
+                        <option value="tesla_y">Tesla Model Y (533 km)</option>
+                        <option value="bmw_i4">BMW i4 (590 km)</option>
+                        <option value="mercedes_eqe">Mercedes EQE (654 km)</option>
+                        <option value="volvo_xc40">Volvo XC40 (425 km)</option>
+                        <option value="hyundai_ioniq5">Hyundai IONIQ 5 (481 km)</option>
+                        <option value="kia_ev6">Kia EV6 (528 km)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Ara Duraklar -->
+            <div class="waypoints-section">
+                <label style="font-size:13px;font-weight:600;color:#555;margin-bottom:10px;display:block">
+                    📍 Ara Duraklar (Opsiyonel)
+                </label>
+                <div id="waypointsList"></div>
+                <div class="add-buttons">
+                    <div class="add-waypoint-btn" onclick="addWaypoint('city')">
+                        <i class="fas fa-city"></i> Şehir Ekle
+                    </div>
+                    <div class="add-custom-btn" onclick="addWaypoint('custom')">
+                        <i class="fas fa-map-marker-alt"></i> Özel Konum Ekle
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Butonlar -->
+            <div class="btn-row">
+                <button class="btn-primary" onclick="calculateRoute()">
+                    <i class="fas fa-route"></i> Rota Hesapla
+                </button>
+                <button class="btn-secondary" onclick="swapStartEnd()">
+                    <i class="fas fa-exchange-alt"></i> Değiştir
+                </button>
+                <button class="btn-secondary" onclick="clearAll()">
+                    <i class="fas fa-trash"></i> Temizle
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>OSRM'den gerçek yol mesafesi hesaplanıyor...</p>
+        </div>
+
+        <div class="result-box" id="resultBox">
+            <div class="result-header" id="resultHeader"></div>
+            <div id="segmentInfo"></div>
+            <div id="stationList"></div>
+        </div>
+    </div>
+
+    <!-- Manuel Konum Modal -->
+    <div class="modal-overlay" id="customLocationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-map-marker-alt"></i> Özel Konum Ekle</h3>
+                <button class="modal-close" onclick="closeCustomLocationModal()">&times;</button>
+            </div>
+            
+            <div class="location-name-input">
+                <div class="form-group">
+                    <label>📝 Konum Adı</label>
+                    <input type="text" id="customLocName" placeholder="Örn: Evim, İş Yerim, Otel...">
+                </div>
+            </div>
+            
+            <div class="coord-inputs">
+                <div class="form-group">
+                    <label>📍 Enlem (Latitude)</label>
+                    <input type="number" id="customLat" placeholder="39.9334" step="any">
+                </div>
+                <div class="form-group">
+                    <label>📍 Boylam (Longitude)</label>
+                    <input type="number" id="customLon" placeholder="32.8597" step="any">
+                </div>
+            </div>
+            
+            <button class="btn-info" onclick="getMyLocationForModal()" style="width:100%;margin-bottom:15px">
+                <i class="fas fa-crosshairs"></i> Mevcut Konumumu Al
+            </button>
+            
+            <button class="btn-primary" onclick="saveCustomLocation()" style="width:100%">
+                <i class="fas fa-check"></i> Kaydet
+            </button>
+            
+            <div class="quick-locations">
+                <h4>🏷️ Hızlı Seçim (Popüler Noktalar)</h4>
+                <button class="quick-loc-btn" onclick="setQuickLocation('İstanbul Havalimanı', 41.2608, 28.7418)">✈️ İstanbul Havalimanı</button>
+                <button class="quick-loc-btn" onclick="setQuickLocation('Sabiha Gökçen', 40.8986, 29.3092)">✈️ Sabiha Gökçen</button>
+                <button class="quick-loc-btn" onclick="setQuickLocation('Ankara Esenboğa', 40.1281, 32.9951)">✈️ Esenboğa</button>
+                <button class="quick-loc-btn" onclick="setQuickLocation('İzmir Adnan Menderes', 38.2924, 27.1570)">✈️ ADB</button>
+                <button class="quick-loc-btn" onclick="setQuickLocation('Antalya Havalimanı', 36.9011, 30.8005)">✈️ Antalya</button>
+                <button class="quick-loc-btn" onclick="setQuickLocation('Osmangazi Köprüsü', 40.7553, 29.5089)">🌉 Osmangazi</button>
+                <button class="quick-loc-btn" onclick="setQuickLocation('Yavuz Sultan Selim Köprüsü', 41.2097, 29.1175)">🌉 YSS Köprüsü</button>
+                <button class="quick-loc-btn" onclick="setQuickLocation('Çanakkale Köprüsü', 40.2361, 26.6597)">🌉 Çanakkale</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ GLOBAL DEĞİŞKENLER ============
+        var CITIES = ['Adana','Adıyaman','Afyon','Ağrı','Aksaray','Amasya','Ankara','Antalya','Ardahan','Artvin','Aydın','Balıkesir','Bartın','Batman','Bayburt','Bilecik','Bingöl','Bitlis','Bolu','Burdur','Bursa','Çanakkale','Çankırı','Çorum','Denizli','Diyarbakır','Düzce','Edirne','Elazığ','Erzincan','Erzurum','Eskişehir','Gaziantep','Giresun','Gümüşhane','Hakkari','Hatay','Iğdır','Isparta','İstanbul','İzmir','K.Maraş','Karabük','Karaman','Kars','Kastamonu','Kayseri','Kırıkkale','Kırklareli','Kırşehir','Kilis','Kocaeli','Konya','Kütahya','Malatya','Manisa','Mardin','Mersin','Muğla','Muş','Nevşehir','Niğde','Ordu','Osmaniye','Rize','Sakarya','Samsun','Siirt','Sinop','Sivas','Şanlıurfa','Şırnak','Tekirdağ','Tokat','Trabzon','Tunceli','Uşak','Van','Yalova','Yozgat','Zonguldak'];
+
+        var COORDS = {
+            'Adana':[37.0000,35.3213],'Adıyaman':[37.7644,38.2763],'Afyon':[38.7569,30.5387],
+            'Ağrı':[39.7191,43.0503],'Aksaray':[38.3726,34.0254],'Amasya':[40.6499,35.8353],
+            'Ankara':[39.9334,32.8597],'Antalya':[36.8969,30.7133],'Ardahan':[41.1087,42.7022],
+            'Artvin':[41.1816,41.8207],'Aydın':[37.8380,27.8456],'Balıkesir':[39.6484,27.8826],
+            'Bartın':[41.6364,32.3375],'Batman':[37.8874,41.1327],'Bayburt':[40.2563,40.2246],
+            'Bilecik':[40.1427,29.9793],'Bingöl':[38.8853,40.4983],'Bitlis':[38.4010,42.1080],
+            'Bolu':[40.7333,31.6075],'Burdur':[37.7183,30.2823],'Bursa':[40.1885,29.0610],
+            'Çanakkale':[40.1553,26.4142],'Çankırı':[40.6013,33.6138],'Çorum':[40.5489,34.9533],
+            'Denizli':[37.7765,29.0864],'Diyarbakır':[37.9246,40.2110],'Düzce':[40.8389,31.1639],
+            'Edirne':[41.6818,26.5623],'Elazığ':[38.6748,39.2225],'Erzincan':[39.7500,39.5000],
+            'Erzurum':[39.9000,41.2700],'Eskişehir':[39.7767,30.5206],'Gaziantep':[37.0662,37.3833],
+            'Giresun':[40.9128,38.3895],'Gümüşhane':[40.4600,39.4710],'Hakkari':[37.5744,43.7408],
+            'Hatay':[36.4018,36.3498],'Iğdır':[39.9208,44.0448],'Isparta':[37.7648,30.5562],
+            'İstanbul':[41.0082,28.9784],'İzmir':[38.4237,27.1428],'K.Maraş':[37.5858,36.9371],
+            'Karabük':[41.1960,32.6255],'Karaman':[37.1810,33.2220],'Kars':[40.6013,43.0975],
+            'Kastamonu':[41.3786,33.7766],'Kayseri':[38.7205,35.4826],'Kırıkkale':[39.8452,33.5063],
+            'Kırklareli':[41.7358,27.2249],'Kırşehir':[39.1450,34.1630],'Kilis':[36.7184,37.1212],
+            'Kocaeli':[40.7654,29.9407],'Konya':[37.8746,32.4932],'Kütahya':[39.4200,29.9857],
+            'Malatya':[38.3552,38.3095],'Manisa':[38.6191,27.4289],'Mardin':[37.3129,40.7351],
+            'Mersin':[36.8000,34.6333],'Muğla':[37.2153,28.3636],'Muş':[38.7310,41.4850],
+            'Nevşehir':[38.6250,34.7120],'Niğde':[37.9658,34.6790],'Ordu':[40.9839,37.8764],
+            'Osmaniye':[37.0742,36.2478],'Rize':[41.0201,40.5234],'Sakarya':[40.7731,30.4038],
+            'Samsun':[41.2867,36.3300],'Siirt':[37.9319,41.9365],'Sinop':[42.0267,35.1551],
+            'Sivas':[39.7477,37.0179],'Şanlıurfa':[37.1674,38.7955],'Şırnak':[37.5137,42.4543],
+            'Tekirdağ':[40.9781,27.5110],'Tokat':[40.3139,36.5544],'Trabzon':[41.0015,39.7178],
+            'Tunceli':[39.1083,39.5400],'Uşak':[38.6795,29.4070],'Van':[38.4891,43.4089],
+            'Yalova':[40.6553,29.2757],'Yozgat':[39.8200,34.8080],'Zonguldak':[41.4564,31.7985]
+        };
+
+        var VEHICLES = {
+            'togg': { name: 'TOGG T10X', range: 523, consumption: 16.9 },
+            'tesla3': { name: 'Tesla Model 3', range: 602, consumption: 14.9 },
+            'tesla_y': { name: 'Tesla Model Y', range: 533, consumption: 16.0 },
+            'bmw_i4': { name: 'BMW i4', range: 590, consumption: 16.2 },
+            'mercedes_eqe': { name: 'Mercedes EQE', range: 654, consumption: 15.8 },
+            'volvo_xc40': { name: 'Volvo XC40', range: 425, consumption: 18.5 },
+            'hyundai_ioniq5': { name: 'Hyundai IONIQ 5', range: 481, consumption: 16.8 },
+            'kia_ev6': { name: 'Kia EV6', range: 528, consumption: 16.5 }
+        };
+
+        var BRANDS = [
+            { name: 'ZES', price: 7.99, color: '#2ecc71' },
+            { name: 'Eşarj', price: 8.49, color: '#3498db' },
+            { name: 'Voltrun', price: 7.49, color: '#e67e22' },
+            { name: 'Sharz', price: 8.99, color: '#9b59b6' },
+            { name: 'Trugo', price: 6.99, color: '#1abc9c' },
+            { name: 'Tesla SC', price: 5.99, color: '#e74c3c' },
+            { name: 'Powersarj', price: 7.79, color: '#34495e' }
+        ];
+
+        // Özel konumlar (GPS veya manuel)
+        var customLocations = {
+            start: null,  // { name: 'Konumum', lat: 41.0082, lon: 28.9784 }
+            end: null
+        };
+
+        var waypointCounter = 0;
+        var currentModalTarget = null; // 'start', 'end', veya 'waypoint_X'
+
+        // ============ SAYFA YÜKLENDİĞİNDE ============
+        document.addEventListener('DOMContentLoaded', function() {
+            populateCitySelects();
+        });
+
+        // ============ ŞEHİR DROPDOWN'LARI DOLDUR ============
+        function populateCitySelects() {
+            var options = '<option value="">-- Şehir Seçin --</option>';
+            options += '<option value="__GPS__">📍 Mevcut Konumum (GPS)</option>';
+            options += '<option value="__CUSTOM__">📌 Özel Konum...</option>';
+            CITIES.forEach(function(city) {
+                options += '<option value="' + city + '">' + city + '</option>';
+            });
+            
+            document.getElementById('startCity').innerHTML = options;
+            document.getElementById('endCity').innerHTML = options;
+            
+            document.getElementById('startCity').value = 'İstanbul';
+            document.getElementById('endCity').value = 'Antalya';
+            
+            // Select değişiklik dinleyicileri
+            document.getElementById('startCity').addEventListener('change', function() {
+                handleSelectChange('start', this.value);
+            });
+            document.getElementById('endCity').addEventListener('change', function() {
+                handleSelectChange('end', this.value);
+            });
+        }
+
+        // ============ SELECT DEĞİŞİKLİK YÖNETİMİ ============
+        function handleSelectChange(target, value) {
+            if (value === '__GPS__') {
+                useMyLocation(target);
+            } else if (value === '__CUSTOM__') {
+                openCustomLocationModal(target);
+            } else {
+                customLocations[target] = null;
+                document.getElementById(target + 'GpsStatus').innerHTML = '';
+            }
+        }
+
+        // ============ MEVCUT KONUM AL (GPS) ============
+        function useMyLocation(target) {
+            var statusEl = document.getElementById(target + 'GpsStatus');
+            var selectEl = document.getElementById(target + 'City');
+            
+            if (!navigator.geolocation) {
+                statusEl.innerHTML = '❌ Tarayıcınız GPS desteklemiyor';
+                statusEl.className = 'gps-status error';
+                return;
+            }
+            
+            statusEl.innerHTML = '⏳ Konum alınıyor...';
+            statusEl.className = 'gps-status loading';
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    var lat = position.coords.latitude;
+                    var lon = position.coords.longitude;
+                    
+                    customLocations[target] = {
+                        name: '📍 Mevcut Konumum',
+                        lat: lat,
+                        lon: lon,
+                        isGPS: true
+                    };
+                    
+                    selectEl.value = '__GPS__';
+                    statusEl.innerHTML = '✅ Konum alındı: ' + lat.toFixed(4) + ', ' + lon.toFixed(4);
+                    statusEl.className = 'gps-status success';
+                },
+                function(error) {
+                    var msg = 'Konum alınamadı';
+                    if (error.code === 1) msg = 'Konum izni reddedildi';
+                    if (error.code === 2) msg = 'Konum bulunamadı';
+                    if (error.code === 3) msg = 'Zaman aşımı';
+                    
+                    statusEl.innerHTML = '❌ ' + msg;
+                    statusEl.className = 'gps-status error';
+                    selectEl.value = '';
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+        }
+
+        // ============ ÖZEL KONUM MODAL ============
+        function openCustomLocationModal(target) {
+            currentModalTarget = target;
+            document.getElementById('customLocName').value = '';
+            document.getElementById('customLat').value = '';
+            document.getElementById('customLon').value = '';
+            document.getElementById('customLocationModal').classList.add('show');
+        }
+
+        function closeCustomLocationModal() {
+            document.getElementById('customLocationModal').classList.remove('show');
+            
+            // Eğer kaydetmeden kapattıysa, select'i sıfırla
+            if (currentModalTarget === 'start' || currentModalTarget === 'end') {
+                if (!customLocations[currentModalTarget]) {
+                    document.getElementById(currentModalTarget + 'City').value = '';
+                }
+            }
+            currentModalTarget = null;
+        }
+
+        function getMyLocationForModal() {
+            if (!navigator.geolocation) {
+                alert('Tarayıcınız GPS desteklemiyor');
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    document.getElementById('customLat').value = position.coords.latitude.toFixed(6);
+                    document.getElementById('customLon').value = position.coords.longitude.toFixed(6);
+                    if (!document.getElementById('customLocName').value) {
+                        document.getElementById('customLocName').value = 'Mevcut Konumum';
+                    }
+                },
+                function(error) {
+                    alert('Konum alınamadı: ' + error.message);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        function setQuickLocation(name, lat, lon) {
+            document.getElementById('customLocName').value = name;
+            document.getElementById('customLat').value = lat;
+            document.getElementById('customLon').value = lon;
+        }
+
+        function saveCustomLocation() {
+            var name = document.getElementById('customLocName').value.trim() || 'Özel Konum';
+            var lat = parseFloat(document.getElementById('customLat').value);
+            var lon = parseFloat(document.getElementById('customLon').value);
+            
+            if (isNaN(lat) || isNaN(lon)) {
+                alert('⚠️ Geçerli koordinat girin!');
+                return;
+            }
+            
+            if (lat < 35 || lat > 43 || lon < 25 || lon > 45) {
+                if (!confirm('Koordinatlar Türkiye dışında görünüyor. Devam etmek istiyor musunuz?')) {
+                    return;
+                }
+            }
+            
+            var locData = { name: '📌 ' + name, lat: lat, lon: lon, isCustom: true };
+            
+            if (currentModalTarget === 'start' || currentModalTarget === 'end') {
+                customLocations[currentModalTarget] = locData;
+                document.getElementById(currentModalTarget + 'City').value = '__CUSTOM__';
+                document.getElementById(currentModalTarget + 'GpsStatus').innerHTML = 
+                    '✅ ' + name + ' (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')';
+                document.getElementById(currentModalTarget + 'GpsStatus').className = 'gps-status success';
+            } else if (currentModalTarget && currentModalTarget.startsWith('waypoint_')) {
+                // Waypoint için
+                var waypointEl = document.getElementById(currentModalTarget);
+                if (waypointEl) {
+                    waypointEl.dataset.customLat = lat;
+                    waypointEl.dataset.customLon = lon;
+                    waypointEl.dataset.customName = name;
+                    var select = waypointEl.querySelector('select');
+                    if (select) select.value = '__CUSTOM__';
+                    var infoEl = waypointEl.querySelector('.waypoint-info');
+                    if (infoEl) infoEl.innerHTML = '📌 ' + name + ' (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')';
+                }
+            }
+            
+            closeCustomLocationModal();
+        }
+
+        // ============ ARA DURAK EKLE ============
+        function addWaypoint(type) {
+            waypointCounter++;
+            var waypointId = 'waypoint_' + waypointCounter;
+            
+            var options = '<option value="">-- Seçin --</option>';
+            if (type === 'custom') {
+                options += '<option value="__CUSTOM__" selected>📌 Özel Konum</option>';
+            } else {
+                options += '<option value="__GPS__">📍 Mevcut Konumum</option>';
+                options += '<option value="__CUSTOM__">📌 Özel Konum...</option>';
+                CITIES.forEach(function(city) {
+                    options += '<option value="' + city + '">' + city + '</option>';
+                });
+            }
+            
+            var html = '<div class="waypoint-item" id="' + waypointId + '" data-type="' + type + '">' +
+                '<span class="waypoint-num">' + getWaypointCount() + '</span>' +
+                '<div class="waypoint-content">' +
+                    '<div class="location-input-group">' +
+                        '<select class="waypoint-select" onchange="handleWaypointSelectChange(\'' + waypointId + '\', this.value)">' + options + '</select>' +
+                        '<button class="btn-info btn-sm" onclick="useGpsForWaypoint(\'' + waypointId + '\')" title="GPS Kullan"><i class="fas fa-crosshairs"></i></button>' +
+                        '<button class="btn-warning btn-sm" onclick="openCustomLocationModal(\'' + waypointId + '\')" title="Manuel Konum"><i class="fas fa-map-pin"></i></button>' +
+                    '</div>' +
+                    '<div class="waypoint-info"></div>' +
+                '</div>' +
+                '<button class="btn-danger btn-sm" onclick="removeWaypoint(\'' + waypointId + '\')"><i class="fas fa-times"></i></button>' +
+                '</div>';
+            
+            document.getElementById('waypointsList').insertAdjacentHTML('beforeend', html);
+            updateWaypointNumbers();
+            
+            // Özel konum eklendiyse modal aç
+            if (type === 'custom') {
+                openCustomLocationModal(waypointId);
+            }
+        }
+
+        function handleWaypointSelectChange(waypointId, value) {
+            var waypointEl = document.getElementById(waypointId);
+            if (!waypointEl) return;
+            
+            if (value === '__GPS__') {
+                useGpsForWaypoint(waypointId);
+            } else if (value === '__CUSTOM__') {
+                openCustomLocationModal(waypointId);
+            } else {
+                // Normal şehir seçildi, custom data'yı temizle
+                delete waypointEl.dataset.customLat;
+                delete waypointEl.dataset.customLon;
+                delete waypointEl.dataset.customName;
+                waypointEl.querySelector('.waypoint-info').innerHTML = '';
+            }
+        }
+
+        function useGpsForWaypoint(waypointId) {
+            var waypointEl = document.getElementById(waypointId);
+            if (!waypointEl) return;
+            
+            var infoEl = waypointEl.querySelector('.waypoint-info');
+            var selectEl = waypointEl.querySelector('select');
+            
+            if (!navigator.geolocation) {
+                infoEl.innerHTML = '❌ GPS desteklenmiyor';
+                return;
+            }
+            
+            infoEl.innerHTML = '⏳ Konum alınıyor...';
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    waypointEl.dataset.customLat = position.coords.latitude;
+                    waypointEl.dataset.customLon = position.coords.longitude;
+                    waypointEl.dataset.customName = 'Mevcut Konumum';
+                    selectEl.value = '__GPS__';
+                    infoEl.innerHTML = '✅ GPS: ' + position.coords.latitude.toFixed(4) + ', ' + position.coords.longitude.toFixed(4);
+                },
+                function(error) {
+                    infoEl.innerHTML = '❌ Konum alınamadı';
+                    selectEl.value = '';
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        function removeWaypoint(id) {
+            var el = document.getElementById(id);
+            if (el) el.remove();
+            updateWaypointNumbers();
+        }
+
+        function clearAll() {
+            document.getElementById('waypointsList').innerHTML = '';
+            document.getElementById('startCity').value = '';
+            document.getElementById('endCity').value = '';
+            document.getElementById('startGpsStatus').innerHTML = '';
+            document.getElementById('endGpsStatus').innerHTML = '';
+            customLocations = { start: null, end: null };
+            waypointCounter = 0;
+            document.getElementById('resultBox').classList.remove('show');
+        }
+
+        function updateWaypointNumbers() {
+            var items = document.querySelectorAll('.waypoint-item');
+            items.forEach(function(item, index) {
+                item.querySelector('.waypoint-num').textContent = index + 1;
+            });
+        }
+
+        function getWaypointCount() {
+            return document.querySelectorAll('.waypoint-item').length + 1;
+        }
+
+        function swapStartEnd() {
+            var startVal = document.getElementById('startCity').value;
+            var endVal = document.getElementById('endCity').value;
+            var startStatus = document.getElementById('startGpsStatus').innerHTML;
+            var endStatus = document.getElementById('endGpsStatus').innerHTML;
+            var startLoc = customLocations.start;
+            var endLoc = customLocations.end;
+            
+            document.getElementById('startCity').value = endVal;
+            document.getElementById('endCity').value = startVal;
+            document.getElementById('startGpsStatus').innerHTML = endStatus;
+            document.getElementById('endGpsStatus').innerHTML = startStatus;
+            customLocations.start = endLoc;
+            customLocations.end = startLoc;
+        }
+
+        // ============ YARDIMCI FONKSİYONLAR ============
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            var R = 6371;
+            var dLat = (lat2 - lat1) * Math.PI / 180;
+            var dLon = (lon2 - lon1) * Math.PI / 180;
+            var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function getRouteFromOSRM(points) {
+            return new Promise(function(resolve, reject) {
+                if (points.length < 2) {
+                    reject('En az 2 nokta gerekli');
+                    return;
+                }
+
+                var coordStr = points.map(function(p) {
+                    return p.lon + ',' + p.lat;
+                }).join(';');
+
+                var url = 'https://router.project-osrm.org/route/v1/driving/' + coordStr + 
+                          '?overview=full&geometries=geojson&steps=false';
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.timeout = 20000;
+
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                                var route = data.routes[0];
+                                resolve({
+                                    distance: Math.round(route.distance / 1000),
+                                    duration: Math.round(route.duration / 60),
+                                    geometry: route.geometry,
+                                    legs: route.legs.map(function(leg) {
+                                        return {
+                                            distance: Math.round(leg.distance / 1000),
+                                            duration: Math.round(leg.duration / 60)
+                                        };
+                                    }),
+                                    isReal: true
+                                });
+                            } else {
+                                reject('Rota bulunamadı: ' + (data.message || data.code));
+                            }
+                        } catch(e) {
+                            reject('JSON hatası: ' + e.message);
+                        }
+                    } else {
+                        reject('HTTP ' + xhr.status);
+                    }
+                };
+
+                xhr.onerror = function() { reject('Bağlantı hatası'); };
+                xhr.ontimeout = function() { reject('Zaman aşımı'); };
+                xhr.send();
+            });
+        }
+
+        function getPointOnRoute(geometry, fraction) {
+            var coords = geometry.coordinates;
+            if (!coords || coords.length < 2) return null;
+
+            if (fraction <= 0) return { lat: coords[0][1], lon: coords[0][0] };
+            if (fraction >= 1) return { lat: coords[coords.length-1][1], lon: coords[coords.length-1][0] };
+
+            var totalLen = 0;
+            var segLens = [];
+            for (var i = 1; i < coords.length; i++) {
+                var len = haversineDistance(coords[i-1][1], coords[i-1][0], coords[i][1], coords[i][0]);
+                segLens.push(len);
+                totalLen += len;
+            }
+
+            var targetLen = totalLen * fraction;
+            var cumLen = 0;
+
+            for (var i = 0; i < segLens.length; i++) {
+                if (cumLen + segLens[i] >= targetLen) {
+                    var segFrac = segLens[i] > 0 ? (targetLen - cumLen) / segLens[i] : 0;
+                    var lon = coords[i][0] + (coords[i+1][0] - coords[i][0]) * segFrac;
+                    var lat = coords[i][1] + (coords[i+1][1] - coords[i][1]) * segFrac;
+                    return { lat: lat, lon: lon };
+                }
+                cumLen += segLens[i];
+            }
+
+            return { lat: coords[coords.length-1][1], lon: coords[coords.length-1][0] };
+        }
+
+        // ============ KONUM BİLGİSİ AL ============
+        function getLocationData(type, element) {
+            // type: 'start', 'end', 'waypoint'
+            
+            if (type === 'start' || type === 'end') {
+                var selectVal = document.getElementById(type + 'City').value;
+                
+                // Özel konum veya GPS
+                if ((selectVal === '__GPS__' || selectVal === '__CUSTOM__') && customLocations[type]) {
+                    return {
+                        name: customLocations[type].name,
+                        lat: customLocations[type].lat,
+                        lon: customLocations[type].lon,
+                        isCustom: true
+                    };
+                }
+                
+                // Normal şehir
+                if (selectVal && COORDS[selectVal]) {
+                    return {
+                        name: selectVal,
+                        lat: COORDS[selectVal][0],
+                        lon: COORDS[selectVal][1],
+                        isCustom: false
+                    };
+                }
+                
+                return null;
+            }
+            
+            if (type === 'waypoint' && element) {
+                var select = element.querySelector('select');
+                var selectVal = select ? select.value : '';
+                
+                // Özel konum veya GPS
+                if ((selectVal === '__GPS__' || selectVal === '__CUSTOM__') && element.dataset.customLat) {
+                    return {
+                        name: element.dataset.customName || 'Özel Konum',
+                        lat: parseFloat(element.dataset.customLat),
+                        lon: parseFloat(element.dataset.customLon),
+                        isCustom: true
+                    };
+                }
+                
+                // Normal şehir
+                if (selectVal && COORDS[selectVal]) {
+                    return {
+                        name: selectVal,
+                        lat: COORDS[selectVal][0],
+                        lon: COORDS[selectVal][1],
+                        isCustom: false
+                    };
+                }
+                
+                return null;
+            }
+            
+            return null;
+        }
+
+        // ============ ROTA HESAPLA ============
+        async function calculateRoute() {
+            // Başlangıç noktası
+            var startLoc = getLocationData('start');
+            if (!startLoc) {
+                alert('⚠️ Başlangıç noktası seçin veya konum belirleyin!');
+                return;
+            }
+            
+            // Varış noktası
+            var endLoc = getLocationData('end');
+            if (!endLoc) {
+                alert('⚠️ Varış noktası seçin veya konum belirleyin!');
+                return;
+            }
+            
+            // Ara durakları topla
+            var waypoints = [];
+            var waypointElements = document.querySelectorAll('.waypoint-item');
+            for (var i = 0; i < waypointElements.length; i++) {
+                var wpLoc = getLocationData('waypoint', waypointElements[i]);
+                if (wpLoc) {
+                    waypoints.push(wpLoc);
+                }
+            }
+            
+            // Tüm noktaları birleştir
+            var allPoints = [startLoc].concat(waypoints).concat([endLoc]);
+            
+            // Aynı nokta kontrolü
+            for (var i = 0; i < allPoints.length - 1; i++) {
+                var dist = haversineDistance(allPoints[i].lat, allPoints[i].lon, 
+                                             allPoints[i+1].lat, allPoints[i+1].lon);
+                if (dist < 1) { // 1 km'den yakın
+                    alert('⚠️ Ardışık iki nokta çok yakın veya aynı!');
+                    return;
+                }
+            }
+
+            // Loading göster
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('resultBox').classList.remove('show');
+
+            var routeData;
+            var isReal = true;
+
+            try {
+                routeData = await getRouteFromOSRM(allPoints);
+            } catch(e) {
+                console.warn('OSRM hatası:', e);
+                // Fallback
+                var totalDist = 0;
+                var legs = [];
+                for (var i = 0; i < allPoints.length - 1; i++) {
+                    var d = haversineDistance(allPoints[i].lat, allPoints[i].lon, 
+                                              allPoints[i+1].lat, allPoints[i+1].lon);
+                    var roadDist = Math.round(d * 1.35);
+                    totalDist += roadDist;
+                    legs.push({ distance: roadDist, duration: Math.round(roadDist / 70 * 60) });
+                }
+                routeData = {
+                    distance: totalDist,
+                    duration: Math.round(totalDist / 70 * 60),
+                    geometry: null,
+                    legs: legs,
+                    isReal: false
+                };
+                isReal = false;
+            }
+
+            document.getElementById('loading').classList.remove('show');
+            displayResults(allPoints, routeData, isReal);
+        }
+
+        // ============ SONUÇLARI GÖSTER ============
+        function displayResults(points, routeData, isReal) {
+            var dist = routeData.distance;
+            var dur = routeData.duration;
+            var h = Math.floor(dur / 60);
+            var m = dur % 60;
+            var vehicleId = document.getElementById('vehicleModel').value;
+
+            // Rota özeti
+            var routeSummaryHtml = '<div class="route-summary">';
+            points.forEach(function(point, idx) {
+                var pointClass = idx === 0 ? 'start' : (idx === points.length - 1 ? 'end' : 'waypoint');
+                if (point.isCustom) pointClass += ' custom';
+                var icon = idx === 0 ? '🚀' : (idx === points.length - 1 ? '🏁' : '📍');
+                var displayName = point.name.length > 15 ? point.name.substring(0, 15) + '...' : point.name;
+                routeSummaryHtml += '<span class="route-point ' + pointClass + '" title="' + point.name + '">' + icon + ' ' + displayName + '</span>';
+                if (idx < points.length - 1) {
+                    routeSummaryHtml += '<span class="route-arrow">→</span>';
+                }
+            });
+            routeSummaryHtml += '</div>';
+
+            // Araç bilgisi
+            var vehicle = VEHICLES[vehicleId];
+            var chargeInfo = 'Araç seçilmedi';
+            var costInfo = 'Seçiniz';
+            
+            if (vehicle) {
+                var chargeCount = Math.ceil(dist / vehicle.range);
+                chargeInfo = chargeCount > 1 ? (chargeCount - 1) + ' kez şarj gerekli' : '✅ Şarjsız gidilebilir';
+                var avgPrice = 7.5;
+                costInfo = '~' + Math.round(dist * vehicle.consumption * avgPrice / 100) + ' TL';
+            }
+
+            var badge = isReal 
+                ? '<span class="badge badge-real">Gerçek Yol</span>' 
+                : '<span class="badge badge-est">Tahmini</span>';
+
+            document.getElementById('resultHeader').innerHTML = 
+                '<h3>✅ Rota Hesaplandı ' + badge + '</h3>' +
+                routeSummaryHtml +
+                '<div class="result-info">' +
+                    '📏 <span>' + dist + ' km</span> | ' +
+                    '⏱️ <span>' + h + ' sa ' + m + ' dk</span> | ' +
+                    '⚡ <span>' + chargeInfo + '</span> | ' +
+                    '💰 <span>' + costInfo + '</span>' +
+                '</div>' +
+                (!isReal ? '<div class="note">⚠️ OSRM\'e ulaşılamadı, tahmini mesafe kullanıldı</div>' : '');
+
+            // Segment bilgileri
+            var segmentHtml = '';
+            if (routeData.legs && routeData.legs.length > 1) {
+                segmentHtml = '<div class="segment-info"><h4>📊 Bölüm Detayları</h4>';
+                routeData.legs.forEach(function(leg, idx) {
+                    var legH = Math.floor(leg.duration / 60);
+                    var legM = leg.duration % 60;
+                    var fromName = points[idx].name.length > 20 ? points[idx].name.substring(0, 20) + '...' : points[idx].name;
+                    var toName = points[idx+1].name.length > 20 ? points[idx+1].name.substring(0, 20) + '...' : points[idx+1].name;
+                    segmentHtml += '<div class="segment-item">' +
+                        '<span>' + fromName + ' → ' + toName + '</span>' +
+                        '<span><strong>' + leg.distance + ' km</strong> (' + legH + 'sa ' + legM + 'dk)</span>' +
+                        '</div>';
+                });
+                segmentHtml += '</div>';
+            }
+            document.getElementById('segmentInfo').innerHTML = segmentHtml;
+
+            // Şarj istasyonları
+            var stationInterval = 150;
+            var numStations = Math.floor(dist / stationInterval);
+            if (numStations < 1 && dist > 100) numStations = 1;
+            if (numStations > 12) numStations = 12;
+
+            var stationHtml = '';
+
+            if (numStations === 0) {
+                stationHtml = '<div class="station-item" style="justify-content:center;border-left-color:#3498db">' +
+                    '<h4>✅ Mesafe kısa (' + dist + ' km), şarj istasyonuna gerek yok</h4></div>';
+            } else {
+                stationHtml = '<h4 style="margin-bottom:12px;color:#555"><i class="fas fa-charging-station"></i> Önerilen Şarj Durakları</h4>';
+                
+                for (var i = 1; i <= numStations; i++) {
+                    var fraction = i / (numStations + 1);
+                    var stDistKm = Math.round(dist * fraction);
+                    var brand = BRANDS[(i - 1) % BRANDS.length];
+                    
+                    var lat, lng;
+                    if (routeData.geometry && routeData.geometry.coordinates) {
+                        var point = getPointOnRoute(routeData.geometry, fraction);
+                        if (point) {
+                            lat = point.lat.toFixed(4);
+                            lng = point.lon.toFixed(4);
+                        } else {
+                            lat = (points[0].lat + (points[points.length-1].lat - points[0].lat) * fraction).toFixed(4);
+                            lng = (points[0].lon + (points[points.length-1].lon - points[0].lon) * fraction).toFixed(4);
+                        }
+                    } else {
+                        lat = (points[0].lat + (points[points.length-1].lat - points[0].lat) * fraction).toFixed(4);
+                        lng = (points[0].lon + (points[points.length-1].lon - points[0].lon) * fraction).toFixed(4);
+                    }
+
+                    var price = (brand.price + (Math.random() * 0.6 - 0.3)).toFixed(2);
+                    var power = [100, 150, 180, 200, 250, 300][(i - 1) % 6];
+
+                    stationHtml += 
+                        '<div class="station-item">' +
+                            '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">' +
+                                '<div style="background:' + brand.color + '20;color:' + brand.color + ';border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;flex-shrink:0;border:2px solid ' + brand.color + '">' + i + '</div>' +
+                                '<div>' +
+                                    '<h4>⚡ ' + brand.name + ' Şarj İstasyonu</h4>' +
+                                    '<div class="info">' + brand.name + ' | ' + power + ' kW DC | 🟢 Müsait</div>' +
+                                    '<div class="price">💰 ' + price + ' TL/kWh</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="station-km">' +
+                                '<div class="km">' + stDistKm + '</div>' +
+                                '<div class="label">km</div>' +
+                            '</div>' +
+                            '<a href="https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng + '" target="_blank" class="gmaps-btn">' +
+                                '<i class="fas fa-directions"></i> Yol Tarifi' +
+                            '</a>' +
+                        '</div>';
+                }
+            }
+
+            document.getElementById('stationList').innerHTML = stationHtml;
+            document.getElementById('resultBox').classList.add('show');
+            document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+</html>
